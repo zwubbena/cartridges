@@ -107,12 +107,12 @@ dl.terms dd{margin:0}
 .fam-bracket{stroke:var(--brass);stroke-width:1.5;fill:none}
 .fam-lbl{fill:var(--brass);font-size:11.5px;font-weight:700}
 /* end-on diameters */
-.dia-row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-start}
-.dia{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;background:none;border:1px solid transparent;padding:8px 4px 6px;color:var(--fg);font:inherit;min-width:78px;flex:1 1 78px;max-width:150px}
+.dia-row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start}
+.dia{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;background:none;border:1px solid transparent;padding:8px 4px 6px;color:var(--fg);font:inherit;width:78px;flex:0 0 auto}
 .dia:hover{border-color:var(--line)}
 .dia[aria-pressed="true"]{border-color:var(--brass);background:var(--surface-2)}
 .dia .box{display:flex;align-items:center;justify-content:center;width:100%}
-.dia .c{position:relative;border-radius:50%;background:var(--copper);box-shadow:inset 0 0 0 2px var(--copper-lo);transition:width .3s,height .3s}
+.dia .c{position:relative;flex:none;border-radius:50%;background:var(--copper);box-shadow:inset 0 0 0 2px var(--copper-lo);transition:width .3s,height .3s}
 .dia .ring{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border:1.5px dashed var(--brass);border-radius:50%;pointer-events:none;transition:width .3s,height .3s}
 .dia .v{font-family:var(--font-mono);font-size:1rem;font-variant-numeric:tabular-nums;line-height:1.1}
 .dia .u{font-family:var(--font-mono);font-size:.78rem;color:var(--muted)}
@@ -541,7 +541,7 @@ function buildLineup(){
       <rect class="hit" x="-${COL/2}" y="${BASE_Y-3.5*PX-14}" width="${COL}" height="${hitH()}" style="fill:transparent"/>
       <path class="case" d="${toPath(casePts(c))}"/><path class="bullet" d="${toPath(bulletPts(c))}"/>
       <text class="lbl" x="0" y="${BASE_Y+18}" text-anchor="middle">${c.short}</text>
-      <text class="dia mono" x="0" y="${BASE_Y+33}" text-anchor="middle">${c.bullet.toFixed(3).replace(/^0/,'')}"</text></g>`;
+      <text class="dia mono" x="0" y="${BASE_Y+33}" text-anchor="middle">${diaStr(c.bullet)}"</text></g>`;
   });
   s+=`<g id="famBrackets"></g>`;
   svg.setAttribute('width',L.width); svg.setAttribute('height',SVG_H); svg.setAttribute('viewBox',`0 0 ${L.width} ${SVG_H}`);
@@ -591,7 +591,7 @@ function updateDia(){
   const maxD=DIA_GROUPS[DIA_GROUPS.length-1].d, boxH=px(maxD+0.04);
   document.querySelectorAll('#diaRow .dia').forEach(b=>{
     const g=DIA_GROUPS[+b.dataset.i], c=b.querySelector('.c'), r=b.querySelector('.ring');
-    b.querySelector('.box').style.height=boxH;
+    b.querySelector('.box').style.height=boxH; b.style.width=Math.max(78,Math.max(g.d,sel.bullet)*SCREEN_PPI*diaScale+10).toFixed(0)+'px';
     c.style.width=c.style.height=px(g.d); r.style.width=r.style.height=px(sel.bullet);
     const same=g.carts.some(k=>k.id===selected); b.setAttribute('aria-pressed',same);
     const delta=g.d-sel.bullet;
@@ -603,7 +603,7 @@ function updateDia(){
 /* ---------- picker + detail ---------- */
 function buildPicker(){
   const p=document.getElementById('picker');
-  p.innerHTML=CARTS.slice().sort(SORTS.dia).map(c=>`<button class="chip" data-id="${c.id}" aria-pressed="${c.id===selected}">${c.short}<span class="d">${c.bullet.toFixed(3).replace(/^0/,'')}"</span></button>`).join('');
+  p.innerHTML=CARTS.slice().sort(SORTS.dia).map(c=>`<button class="chip" data-id="${c.id}" aria-pressed="${c.id===selected}">${c.short}<span class="d">${diaStr(c.bullet)}"</span></button>`).join('');
   p.addEventListener('click',e=>{const b=e.target.closest('.chip');if(b)select(b.dataset.id);});
 }
 function select(id){
