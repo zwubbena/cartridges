@@ -485,7 +485,8 @@ const SORTS={dia:(a,b)=>a.bullet-b.bullet||a.oal-b.oal, oal:(a,b)=>a.oal-b.oal, 
 let sortMode='dia', selected='9mm';
 
 /* ---------- to-scale line-up ---------- */
-const PX=64, BASE_Y=248, COL=61, LEFT=74, SVG_H=318;
+const PX=64, BASE_Y=248, COL=61, LEFT=74, SVG_H=326;
+const hitH=()=>3.5*PX+(sortMode==='fam'?82:70); /* grouped view: the focus ring encloses the family bracket and its label */
 function casePts(c){
   const pts=[], r=c.rim/2, b=c.base/2;
   if(c.head==='rimfire'){pts.push([r,0],[r,0.045],[b,0.045]);}
@@ -537,7 +538,7 @@ function buildLineup(){
   s+=`<line x1="${LEFT-34}" y1="${BASE_Y}" x2="${L.width}" y2="${BASE_Y}" style="stroke:var(--line);stroke-width:1"/>`;
   CARTS.forEach(c=>{
     s+=`<g class="cart" data-id="${c.id}" tabindex="0" role="button" aria-pressed="${c.id===selected}" aria-label="${c.name}, bullet ${c.bullet} inch, overall length ${c.oal} inch" style="transform:translate(${L.pos[c.id]}px,0)">
-      <rect x="-${COL/2}" y="${BASE_Y-3.5*PX-14}" width="${COL}" height="${3.5*PX+70}" style="fill:transparent"/>
+      <rect class="hit" x="-${COL/2}" y="${BASE_Y-3.5*PX-14}" width="${COL}" height="${hitH()}" style="fill:transparent"/>
       <path class="case" d="${toPath(casePts(c))}"/><path class="bullet" d="${toPath(bulletPts(c))}"/>
       <text class="lbl" x="0" y="${BASE_Y+18}" text-anchor="middle">${c.short}</text>
       <text class="dia mono" x="0" y="${BASE_Y+33}" text-anchor="middle">${c.bullet.toFixed(3).replace(/^0/,'')}"</text></g>`;
@@ -560,7 +561,7 @@ function drawBrackets(L){
 }
 function relayout(){
   const svg=document.getElementById('lineupSvg'); const L=layout();
-  svg.querySelectorAll('.cart').forEach(g=>{g.style.transform=`translate(${L.pos[g.dataset.id]}px,0)`;});
+  svg.querySelectorAll('.cart').forEach(g=>{g.style.transform=`translate(${L.pos[g.dataset.id]}px,0)`;g.querySelector('.hit').setAttribute('height',hitH());});
   svg.setAttribute('width',L.width); svg.setAttribute('viewBox',`0 0 ${L.width} ${SVG_H}`); svg.style.minWidth=L.width+'px';
   drawBrackets(L);
 }
