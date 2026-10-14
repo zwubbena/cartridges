@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cartridge Line-Up</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+[hidden]{display:none!important}
+img{max-width:100%}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+/* Layout: one reading column; the true-scale line-up and the name-vs-diameter chart are full-width instruments inside it, each scrolling sideways on narrow screens. */
+:root{
+  --bg:#eef0f1; --surface:#f8f9fa; --surface-2:#e2e5e9; --line:#c6ccd3; --fg:#1b1f25; --muted:#5a6370;
+  --brass:#8a6a1c; --brass-fill:#c9a24c; --brass-hi:#e6cd84; --brass-lo:#9c7a2e;
+  --copper:#a0512c; --copper-hi:#d08a64; --copper-lo:#7e3e22; --lead:#7c8793; --steel:#4b5563;
+  --ok:#2b7a4b; --warn:#a86a00; --danger:#b4261e;
+  --font-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --font-body:"Barlow","Helvetica Neue",Arial,sans-serif;
+  --font-mono:"IBM Plex Mono",Consolas,"Courier New",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15181c; --surface:#1d2127; --surface-2:#282d35; --line:#3a414b; --fg:#e8e4da; --muted:#9aa3ae;
+    --brass:#d6b45f; --brass-fill:#b4923d; --brass-hi:#dcc270; --brass-lo:#866a26;
+    --copper:#c97d55; --copper-hi:#e0a07c; --copper-lo:#8c4a2c; --lead:#8c95a0; --steel:#6b7685;
+    --ok:#5fc48a; --warn:#e4a73a; --danger:#ec6b62;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15181c; --surface:#1d2127; --surface-2:#282d35; --line:#3a414b; --fg:#e8e4da; --muted:#9aa3ae;
+  --brass:#d6b45f; --brass-fill:#b4923d; --brass-hi:#dcc270; --brass-lo:#866a26;
+  --copper:#c97d55; --copper-hi:#e0a07c; --copper-lo:#8c4a2c; --lead:#8c95a0; --steel:#6b7685;
+  --ok:#5fc48a; --warn:#e4a73a; --danger:#ec6b62;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg); color:var(--fg); font-family:var(--font-body); font-size:16px; line-height:1.5; margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px)); padding-right:max(16px,env(safe-area-inset-right,0px)); padding-block:0 56px;
+}
+.wrap{max-width:1180px;margin:0 auto}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.hero{padding-block:44px 26px;border-bottom:3px solid var(--brass)}
+.eyebrow{font-family:var(--font-display);text-transform:uppercase;letter-spacing:.14em;font-size:.82rem;color:var(--brass);font-weight:600;margin:0 0 10px}
+h1{font-family:var(--font-display);font-weight:700;font-size:clamp(2.8rem,8vw,5rem);line-height:.92;margin:0 0 16px;text-wrap:balance}
+.lede{font-size:1.12rem;max-width:60ch;margin:0 0 20px}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;list-style:none}
+.toc a{display:inline-block;font-family:var(--font-display);font-weight:600;text-transform:uppercase;letter-spacing:.07em;font-size:.86rem;color:var(--fg);text-decoration:none;border:1px solid var(--line);padding:6px 11px;background:var(--surface)}
+.toc a:hover{border-color:var(--brass);color:var(--brass)}
+section{padding-block:44px;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h2{font-family:var(--font-display);font-weight:700;font-size:clamp(1.9rem,4.5vw,2.6rem);line-height:1.02;margin:0 0 12px;text-wrap:balance}
+h3{font-family:var(--font-display);font-weight:600;font-size:1.2rem;margin:0 0 8px;text-transform:uppercase;letter-spacing:.05em;text-wrap:balance}
+p{margin:0 0 12px}
+.prose{max-width:64ch}
+.muted{color:var(--muted)}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.grid{display:grid;gap:20px}
+.cols-2{grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+.cols-3{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.panel{background:var(--surface);border:1px solid var(--line);padding:18px 20px;min-width:0}
+.panel h3{margin-top:0}
+.panel p:last-child{margin-bottom:0}
+.scroll-x{overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+svg{display:block;max-width:100%}
+svg text{font-family:var(--font-display);font-size:13px;fill:var(--fg);letter-spacing:.06em;text-transform:uppercase}
+svg text.mono{font-family:var(--font-mono);letter-spacing:0;text-transform:none;font-size:11px}
+.leader{stroke:var(--muted);stroke-width:1;fill:none}
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.pill{font-family:var(--font-display);font-weight:600;text-transform:uppercase;letter-spacing:.07em;font-size:.84rem;padding:7px 13px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;cursor:pointer;line-height:1.1}
+.pill:hover{border-color:var(--brass)}
+.pill[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 18px}
+.chip{display:inline-flex;align-items:baseline;gap:7px;font-family:var(--font-display);font-weight:600;font-size:.95rem;padding:6px 10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer;line-height:1.1}
+.chip .d{font-family:var(--font-mono);font-size:.78rem;color:var(--muted);font-weight:400}
+.chip:hover{border-color:var(--brass)}
+.chip[aria-pressed="true"]{border-color:var(--brass);box-shadow:inset 0 -3px 0 var(--brass)}
+.chip[aria-pressed="true"] .d{color:var(--fg)}
+/* anatomy */
+.anat .part{transition:stroke-width .15s}
+.anat .lbl{fill:var(--muted)}
+.anat[data-active="bullet"] .p-bullet,.anat[data-active="case"] .p-case,.anat[data-active="powder"] .p-powder,.anat[data-active="primer"] .p-primer,.anat[data-active="rim"] .p-rim,.anat[data-active="neck"] .p-neck{stroke:var(--fg);stroke-width:2.5}
+.anat[data-active="bullet"] .l-bullet,.anat[data-active="case"] .l-case,.anat[data-active="powder"] .l-powder,.anat[data-active="primer"] .l-primer,.anat[data-active="rim"] .l-rim,.anat[data-active="neck"] .l-neck{fill:var(--fg);font-weight:700}
+.parts{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.part-desc{min-height:3.2em;border-left:3px solid var(--brass);padding:4px 0 4px 14px;max-width:64ch}
+.part-desc strong{font-family:var(--font-display);text-transform:uppercase;letter-spacing:.06em;font-size:.95rem}
+dl.terms{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:6px 16px}
+dl.terms dt{font-family:var(--font-display);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:.95rem;padding-top:2px}
+dl.terms dd{margin:0}
+@media (max-width:480px){dl.terms{grid-template-columns:1fr}dl.terms dd{margin-bottom:6px}}
+/* line-up */
+.lineup-box{background:var(--surface);border:1px solid var(--line);padding:10px 0 6px}
+.cart{cursor:pointer;transition:transform .5s cubic-bezier(.2,.7,.2,1),opacity .3s}
+.cart .case{fill:url(#gBrass);stroke:var(--brass-lo);stroke-width:.6}
+.cart .bullet{fill:url(#gCopper);stroke:var(--copper-lo);stroke-width:.6}
+.cart .lbl{fill:var(--fg);font-size:12px;letter-spacing:.03em}
+.cart .dia{fill:var(--muted)}
+.cart[aria-pressed="true"] .case,.cart[aria-pressed="true"] .bullet{stroke:var(--fg);stroke-width:1.6}
+.cart[aria-pressed="true"] .lbl{font-weight:700}
+.cart[aria-pressed="true"] .dia{fill:var(--fg)}
+.cart:hover .lbl{fill:var(--brass)}
+.ruler line{stroke:var(--muted);stroke-width:1}
+.ruler text{fill:var(--muted);font-size:11px;letter-spacing:0;text-transform:none;font-family:var(--font-mono)}
+.fam-bracket{stroke:var(--brass);stroke-width:1.5;fill:none}
+.fam-lbl{fill:var(--brass);font-size:11.5px;font-weight:700}
+/* end-on diameters */
+.dia-row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-start}
+.dia{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;background:none;border:1px solid transparent;padding:8px 4px 6px;color:var(--fg);font:inherit;min-width:78px;flex:1 1 78px;max-width:150px}
+.dia:hover{border-color:var(--line)}
+.dia[aria-pressed="true"]{border-color:var(--brass);background:var(--surface-2)}
+.dia .box{display:flex;align-items:center;justify-content:center;width:100%}
+.dia .c{position:relative;border-radius:50%;background:var(--copper);box-shadow:inset 0 0 0 2px var(--copper-lo);transition:width .3s,height .3s}
+.dia .ring{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border:1.5px dashed var(--brass);border-radius:50%;pointer-events:none;transition:width .3s,height .3s}
+.dia .v{font-family:var(--font-mono);font-size:1rem;font-variant-numeric:tabular-nums;line-height:1.1}
+.dia .u{font-family:var(--font-mono);font-size:.78rem;color:var(--muted)}
+.dia .names{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 6px;font-family:var(--font-display);font-weight:600;font-size:.86rem;line-height:1.15}
+.dia .delta{font-family:var(--font-mono);font-size:.78rem;color:var(--brass);font-variant-numeric:tabular-nums;min-height:1.2em}
+.dia-key{display:flex;flex-wrap:wrap;gap:16px;font-size:.9rem;margin:0 0 10px;align-items:center}
+.dia-key span{display:inline-flex;align-items:center;gap:6px}
+.dia-key .k1{width:12px;height:12px;border-radius:50%;background:var(--copper);display:inline-block}
+.dia-key .k2{width:12px;height:12px;border-radius:50%;border:1.5px dashed var(--brass);display:inline-block}
+.detail{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--brass);padding:20px 22px;min-width:0}
+.detail h3{font-size:1.9rem;letter-spacing:.01em;text-transform:none;line-height:1;margin:0 0 2px}
+.detail .aka{color:var(--muted);margin:0 0 16px;font-family:var(--font-mono);font-size:.85rem}
+.specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px 18px;margin:0 0 18px}
+.spec .k{display:block;font-family:var(--font-display);text-transform:uppercase;letter-spacing:.08em;font-size:.76rem;color:var(--muted);font-weight:600}
+.spec .v{display:block;font-family:var(--font-mono);font-size:1.08rem;font-variant-numeric:tabular-nums}
+.spec .u{display:block;font-family:var(--font-mono);font-size:.8rem;color:var(--muted)}
+.load{border-top:1px solid var(--line);padding-top:14px;margin-bottom:14px}
+.formula{font-family:var(--font-mono);font-size:.84rem;color:var(--muted);margin:6px 0 0;font-variant-numeric:tabular-nums}
+.note{margin:0 0 10px}
+.note strong{font-family:var(--font-display);text-transform:uppercase;letter-spacing:.07em;font-size:.82rem;color:var(--brass);display:block;margin-bottom:1px}
+.note.safety{border-left:3px solid var(--warn);padding-left:12px}
+.note.safety strong{color:var(--warn)}
+.kin{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.kin .chip{font-size:.88rem;padding:4px 9px}
+/* chart */
+.chart-legend{display:flex;flex-wrap:wrap;gap:16px;font-size:.9rem;margin:0 0 8px}
+.chart-legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:11px;height:11px;border-radius:50%;display:inline-block;border:2px solid var(--copper)}
+.sw.fill{background:var(--copper)}
+/* gauge */
+.gauge-row{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;justify-content:flex-start}
+.gauge{display:flex;flex-direction:column;align-items:center;gap:6px;font-family:var(--font-display);font-weight:600;font-size:.95rem;text-align:center}
+.gauge .d{font-family:var(--font-mono);font-weight:400;font-size:.78rem;color:var(--muted)}
+.bore{border-radius:50%;background:var(--surface-2);border:3px solid var(--steel);box-shadow:inset 0 0 0 4px var(--lead)}
+/* bullets */
+.bul{display:grid;grid-template-columns:72px 1fr;gap:14px;align-items:start}
+.bul svg{width:72px;height:92px}
+.bul h3{font-size:1.05rem;margin-bottom:4px}
+.bul p{font-size:.95rem}
+/* mismatch */
+.verdict{display:inline-block;font-family:var(--font-display);font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:.8rem;padding:3px 9px;border:1.5px solid currentColor;margin-bottom:10px}
+.verdict.ok{color:var(--ok)}.verdict.no{color:var(--muted)}.verdict.warn{color:var(--warn)}.verdict.danger{color:var(--danger)}
+.pair{font-family:var(--font-display);font-weight:700;font-size:1.3rem;line-height:1.15;margin:0 0 6px;text-transform:none;letter-spacing:0}
+.rule{background:var(--surface-2);color:var(--fg);border-left:4px solid var(--brass);padding:18px 22px;margin:0 0 20px}
+.rule p{margin:0;font-size:1.1rem}
+.rule strong{font-family:var(--font-display);text-transform:uppercase;letter-spacing:.1em;font-size:.85rem;display:block;margin-bottom:4px;color:var(--brass)}
+/* quiz */
+.quiz{max-width:720px}
+.q-num{font-family:var(--font-display);text-transform:uppercase;letter-spacing:.1em;font-size:.82rem;color:var(--brass);font-weight:600;margin:0 0 6px}
+.q-text{font-family:var(--font-display);font-weight:600;font-size:1.35rem;line-height:1.2;margin:0 0 14px}
+.q-opts{display:grid;gap:8px;margin:0 0 14px}
+.q-opt{display:block;width:100%;text-align:left;padding:11px 14px;border:1px solid var(--line);background:var(--surface);font:inherit;color:var(--fg);cursor:pointer;line-height:1.35}
+.q-opt:hover:not(:disabled){border-color:var(--brass)}
+.q-opt:disabled{cursor:default;opacity:.75}
+.q-opt.correct{border-color:var(--ok);box-shadow:inset 4px 0 0 var(--ok);opacity:1}
+.q-opt.wrong{border-color:var(--danger);box-shadow:inset 4px 0 0 var(--danger);opacity:1}
+.q-fb{border-left:3px solid var(--brass);padding:6px 0 6px 14px;margin:0 0 14px;min-height:2em}
+.q-fb strong{font-family:var(--font-display);text-transform:uppercase;letter-spacing:.07em}
+.q-fb.good strong{color:var(--ok)}.q-fb.bad strong{color:var(--danger)}
+.btn{font-family:var(--font-display);font-weight:700;text-transform:uppercase;letter-spacing:.09em;font-size:.9rem;padding:10px 18px;border:1px solid var(--fg);background:var(--fg);color:var(--bg);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--fg)}
+.score{font-family:var(--font-display);font-size:2.4rem;font-weight:700;line-height:1;margin:0 0 8px}
+.progress{display:flex;gap:4px;margin:0 0 18px}
+.progress i{flex:1;height:5px;background:var(--surface-2);display:block}
+.progress i.done{background:var(--brass)}
+.progress i.miss{background:var(--danger)}
+/* reference */
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:.92rem;background:var(--surface)}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-family:var(--font-display);text-transform:uppercase;letter-spacing:.07em;font-size:.78rem;color:var(--muted);font-weight:600;background:var(--surface-2)}
+td.n,th.n{text-align:right;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+td.nm{font-family:var(--font-display);font-weight:600;font-size:1rem;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}html{scroll-behavior:auto}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+<header class="hero">
+  <p class="eyebrow">Firearms and safety course · study guide</p>
+  <h1>Cartridge Line-Up</h1>
+  <p class="lede">A cartridge name is a nickname, not a measurement. This guide shows what the names mean, how the common cartridges compare at true scale, and the mismatches a safety course cares about.</p>
+  <ul class="toc">
+    <li><a href="#anatomy">Anatomy</a></li>
+    <li><a href="#names">Names</a></li>
+    <li><a href="#lineup">The line-up</a></li>
+    <li><a href="#gauge">Shotgun gauge</a></li>
+    <li><a href="#construction">Bullet construction</a></li>
+    <li><a href="#mismatch">Mismatches</a></li>
+    <li><a href="#quiz">Quiz</a></li>
+    <li><a href="#reference">Spec table</a></li>
+  </ul>
+</header>
+
+<main>
+<section id="anatomy">
+  <p class="eyebrow">Part 1</p>
+  <h2>One round, four parts</h2>
+  <p class="prose">A loaded round is a cartridge. The bullet is only the part that leaves the barrel. Pick a part to see what it does.</p>
+  <div class="grid cols-2">
+    <div class="panel">
+      <div class="scroll-x">
+      <svg class="anat" id="anatSvg" data-active="bullet" viewBox="0 0 760 320" width="760" style="min-width:560px" aria-labelledby="anatTitle" role="img">
+        <title id="anatTitle">Cutaway of a bottleneck rifle cartridge with its parts labeled</title>
+        <defs>
+          <pattern id="powder" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.3" style="fill:var(--steel)"/><circle cx="5" cy="5" r="1" style="fill:var(--steel)"/></pattern>
+        </defs>
+        <!-- case (brass) -->
+        <path class="part p-case" d="M80 126 H92 V134 H106 V128 H440 L470 144 H540 V196 L470 212 H440 V212 H106 V206 H92 V214 H80 Z" style="fill:var(--brass-fill);stroke:var(--brass-lo);stroke-width:1"/>
+        <path class="part p-rim" d="M80 126 H92 V134 H106 V206 H92 V214 H80 Z" style="fill:none;stroke:none"/>
+        <path class="part p-neck" d="M440 128 L470 144 H540 V196 L470 212 H440 Z" style="fill:none;stroke:none"/>
+        <!-- cavity with powder -->
+        <path d="M128 133 H436 L466 150 H540 V190 L466 207 H436 V207 H128 Z" style="fill:var(--surface-2)"/>
+        <path class="part p-powder" d="M128 133 H436 L466 150 H500 V190 H466 L436 207 H128 Z" style="fill:url(#powder);stroke:none"/>
+        <!-- primer and flash hole -->
+        <rect class="part p-primer" x="84" y="158" width="26" height="24" style="fill:var(--steel);stroke:var(--surface);stroke-width:1"/>
+        <rect x="110" y="167" width="18" height="6" style="fill:var(--surface-2)"/>
+        <!-- bullet seated in the neck -->
+        <path class="part p-bullet" d="M500 150 H560 C620 150 662 161 690 168 V172 C662 179 620 190 560 190 H500 Z" style="fill:var(--copper);stroke:var(--copper-lo);stroke-width:1"/>
+        <!-- labels -->
+        <line class="leader" x1="99" y1="86" x2="99" y2="124"/>
+        <text class="lbl l-rim" x="86" y="78">Rim and extractor groove</text>
+        <line class="leader" x1="300" y1="86" x2="300" y2="150"/>
+        <text class="lbl l-powder" x="300" y="78" text-anchor="middle">Propellant (powder)</text>
+        <line class="leader" x1="505" y1="86" x2="505" y2="142"/>
+        <text class="lbl l-neck" x="505" y="78" text-anchor="middle">Shoulder and neck</text>
+        <line class="leader" x1="97" y1="184" x2="97" y2="284"/>
+        <text class="lbl l-primer" x="97" y="300" text-anchor="middle">Primer</text>
+        <line class="leader" x1="300" y1="214" x2="300" y2="284"/>
+        <text class="lbl l-case" x="300" y="300" text-anchor="middle">Case</text>
+        <line class="leader" x1="640" y1="184" x2="640" y2="284"/>
+        <text class="lbl l-bullet" x="640" y="300" text-anchor="middle">Bullet (the projectile)</text>
+      </svg>
+      </div>
+      <div class="parts" id="partBtns">
+        <button class="pill" data-part="bullet" aria-pressed="true">Bullet</button>
+        <button class="pill" data-part="case" aria-pressed="false">Case</button>
+        <button class="pill" data-part="powder" aria-pressed="false">Propellant</button>
+        <button class="pill" data-part="primer" aria-pressed="false">Primer</button>
+        <button class="pill" data-part="rim" aria-pressed="false">Rim and groove</button>
+        <button class="pill" data-part="neck" aria-pressed="false">Shoulder and neck</button>
+      </div>
+      <div class="part-desc" id="partDesc"></div>
+    </div>
+    <div class="panel">
+      <h3>Where the primer sits</h3>
+      <svg viewBox="0 0 340 160" width="340" role="img" aria-label="Base view of a centerfire case next to a rimfire case">
+        <circle cx="80" cy="70" r="54" style="fill:var(--brass-fill);stroke:var(--brass-lo);stroke-width:1"/>
+        <circle cx="80" cy="70" r="16" style="fill:var(--steel)"/>
+        <circle cx="80" cy="70" r="3" style="fill:var(--surface-2)"/>
+        <circle cx="250" cy="70" r="54" style="fill:var(--brass-fill);stroke:var(--brass-lo);stroke-width:1"/>
+        <circle cx="250" cy="70" r="47" style="fill:none;stroke:var(--copper);stroke-width:9"/>
+        <text x="80" y="150" text-anchor="middle">Centerfire</text>
+        <text x="250" y="150" text-anchor="middle">Rimfire</text>
+      </svg>
+      <p><strong>Centerfire:</strong> the primer is a separate cup pressed into the center of the base. Nearly every handgun and rifle cartridge in this guide. Cases can be reloaded.</p>
+      <p><strong>Rimfire:</strong> the priming compound is spun into the hollow rim, and the firing pin crushes the rim edge. The .22 LR and .22 WMR. Cases cannot be reloaded, and rimfire ammunition is more sensitive to being dropped or struck.</p>
+      <h3 style="margin-top:18px">Words to get right</h3>
+      <dl class="terms">
+        <dt>Cartridge, round</dt><dd>The complete loaded unit: bullet, case, propellant, primer.</dd>
+        <dt>Bullet</dt><dd>Only the projectile. Calling the whole round a bullet is the most common slip.</dd>
+        <dt>Caliber</dt><dd>The nominal bore or bullet diameter, in inches or millimeters. A caliber is not a cartridge: ".30 caliber" covers the .30-30, the .308 Winchester, the .30-06 and more.</dd>
+        <dt>Grain</dt><dd>The unit for bullet weight and powder charge. 7,000 grains make one pound.</dd>
+        <dt>Headstamp</dt><dd>The cartridge name and maker code pressed into the base of the case.</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+<section id="names">
+  <p class="eyebrow">Part 2</p>
+  <h2>What the name tells you, and what it does not</h2>
+  <div class="grid cols-3">
+    <div class="panel">
+      <h3>Inch names</h3>
+      <p class="mono" style="font-size:1.3rem;margin-bottom:6px">.22 &nbsp; .243 &nbsp; .45</p>
+      <p>The number is the nominal bullet diameter in inches, written without the leading zero: .45 means 0.45 inch. The words after it name the maker or the design: Remington, Winchester, Special, Magnum, ACP (Automatic Colt Pistol).</p>
+    </div>
+    <div class="panel">
+      <h3>Metric names</h3>
+      <p class="mono" style="font-size:1.3rem;margin-bottom:6px">9×19 &nbsp; 5.56×45 &nbsp; 7.62×39</p>
+      <p>Nominal bullet diameter × case length, both in millimeters. Two cartridges can share the first number and still fit different rifles: 7.62×39mm feeds an AK, 7.62×51mm feeds a .308 Winchester rifle.</p>
+    </div>
+    <div class="panel">
+      <h3>Hyphenated names</h3>
+      <p class="mono" style="font-size:1.3rem;margin-bottom:6px">.30-06 &nbsp; .30-30</p>
+      <p>The first number is still the caliber. The second is history: .30-06 is the .30 caliber cartridge adopted in 1906, said "thirty-aught-six"; .30-30 carried 30 grains of smokeless powder in its first load.</p>
+    </div>
+  </div>
+  <div class="grid cols-2" style="margin-top:20px">
+    <div class="panel">
+      <h3>What the name says vs. what the bullet measures</h3>
+      <p>The number in a name is nominal. The filled dot is the measured bullet diameter; the hollow dot is the number in the name. Where the two sit apart, the name is a holdover from an older design, a rounding, or a different way of measuring the bore.</p>
+      <div class="chart-legend"><span><i class="sw"></i> number in the name</span><span><i class="sw fill"></i> measured bullet diameter</span></div>
+      <div class="scroll-x"><svg id="nameChart" role="img" aria-label="Dot chart comparing the number in each cartridge name with its measured bullet diameter"></svg></div>
+    </div>
+    <div class="panel">
+      <h3>The case tells you what it is</h3>
+      <svg viewBox="0 0 200 200" width="200" role="img" aria-label="Headstamp on the base of a case: the cartridge name around the top, the maker code around the bottom, the primer in the center">
+        <defs>
+          <path id="arcTop" d="M38 100 a62 62 0 0 1 124 0"/>
+          <path id="arcBot" d="M38 100 a62 62 0 0 0 124 0"/>
+        </defs>
+        <circle cx="100" cy="100" r="88" style="fill:var(--brass-fill);stroke:var(--brass-lo);stroke-width:1.5"/>
+        <circle cx="100" cy="100" r="78" style="fill:none;stroke:var(--brass-lo);stroke-width:.8;opacity:.6"/>
+        <circle cx="100" cy="100" r="24" style="fill:var(--steel)"/>
+        <text style="font-size:17px;font-weight:700;fill:var(--brass-lo);letter-spacing:.12em"><textPath href="#arcTop" startOffset="50%" text-anchor="middle">9mm LUGER</textPath></text>
+        <text style="font-size:15px;font-weight:700;fill:var(--brass-lo);letter-spacing:.14em"><textPath href="#arcBot" startOffset="50%" text-anchor="middle">MAKER</textPath></text>
+      </svg>
+      <p>Every centerfire case carries a headstamp: the cartridge name and a maker code pressed into the base. Rimfire cases carry only a maker letter, so for .22s the box is the label.</p>
+      <p>The firearm carries its chambering stamped on the barrel or slide. The rule a safety course wants you to leave with: <strong>the headstamp and the barrel stamp match, exactly, before a round goes in.</strong> "It fits" proves nothing, as the mismatch section shows.</p>
+    </div>
+  </div>
+</section>
+
+<section id="lineup">
+  <p class="eyebrow">Part 3</p>
+  <h2>The line-up, at true scale</h2>
+  <p class="prose">Eighteen common cartridges, each drawn from its published dimensions: rim and case diameters, case length, bullet diameter, and overall length. Sort them, then pick one for its numbers.</p>
+  <div class="pills" id="sortBtns" role="group" aria-label="Sort the line-up">
+    <button class="pill" data-sort="dia" aria-pressed="true">By bullet diameter</button>
+    <button class="pill" data-sort="oal" aria-pressed="false">By overall length</button>
+    <button class="pill" data-sort="energy" aria-pressed="false">By energy</button>
+    <button class="pill" data-sort="fam" aria-pressed="false">Grouped by bullet diameter</button>
+  </div>
+  <div class="lineup-box scroll-x"><svg id="lineupSvg" role="group" aria-label="Cartridges drawn to scale; press one to see its details"></svg></div>
+  <div class="panel" style="margin-top:16px">
+    <h3>End-on: the bullet diameters</h3>
+    <p class="prose">Looking straight at the bullet tips. Each circle is one bullet diameter, with the cartridges that share it listed underneath. The dashed ring on every circle is the diameter of the cartridge selected below, so the difference between any two shows directly. The eighteen cartridges come down to twelve diameters.</p>
+    <div class="pills" id="diaScale" role="group" aria-label="Magnification">
+      <button class="pill" data-scale="1" aria-pressed="false">1× actual size</button>
+      <button class="pill" data-scale="2" aria-pressed="true">2×</button>
+      <button class="pill" data-scale="4" aria-pressed="false">4×</button>
+    </div>
+    <div class="dia-key"><span><i class="k1"></i> bullet diameter</span><span><i class="k2"></i> selected cartridge's diameter</span><span class="muted" id="diaScaleNote"></span></div>
+    <div class="dia-row" id="diaRow" role="group" aria-label="Bullet diameters drawn as circles; press one to select"></div>
+  </div>
+  <div class="chips" id="picker" role="group" aria-label="Pick a cartridge"></div>
+  <div class="detail" id="detail" aria-live="polite"></div>
+</section>
+
+<section id="gauge">
+  <p class="eyebrow">Part 4</p>
+  <h2>Shotguns count the other way</h2>
+  <div class="grid cols-2">
+    <div class="prose">
+      <p>A shotgun's gauge is not a diameter. It is the number of lead balls of the bore's diameter that together weigh one pound. Twelve such balls make a pound for a 12-gauge, so a smaller gauge number means a bigger bore.</p>
+      <p>The .410 is the exception: it is a bore diameter in inches, like a rifle caliber. Measured as a gauge it would be about 67.</p>
+      <p>Shotgun shells are named by gauge and by length (2¾, 3, 3½ inches). The length stamped on the barrel is the longest shell the chamber takes.</p>
+    </div>
+    <div class="panel">
+      <h3>Bore diameters, to scale</h3>
+      <div class="gauge-row" id="gaugeRow"></div>
+    </div>
+  </div>
+</section>
+
+<section id="construction">
+  <p class="eyebrow">Part 5</p>
+  <h2>Bullet construction</h2>
+  <p class="prose">The diameter says which firearm a bullet fits. The construction says what the bullet does when it arrives. Most boxes name the construction with a short code.</p>
+  <div class="grid cols-3" id="bulletTypes"></div>
+</section>
+
+<section id="mismatch">
+  <p class="eyebrow">Part 6</p>
+  <h2>Mismatches a safety course cares about</h2>
+  <div class="rule"><p><strong>The one rule</strong>Read the headstamp on the case. Read the chambering on the barrel or slide. Load only when the two match. Fitting the chamber proves nothing.</p></div>
+  <div class="grid cols-2" id="pairs"></div>
+</section>
+
+<section id="quiz">
+  <p class="eyebrow">Part 7</p>
+  <h2>Check yourself</h2>
+  <div class="quiz" id="quizBox"></div>
+</section>
+
+<section id="reference">
+  <p class="eyebrow">Reference</p>
+  <h2>Spec table</h2>
+  <div class="grid cols-3" style="margin-bottom:20px">
+    <div class="panel"><h3>Length</h3><p class="mono">1 in = 25.4 mm<br>1 mm = 0.03937 in</p></div>
+    <div class="panel"><h3>Weight</h3><p class="mono">7,000 gr = 1 lb<br>1 gr = 0.0648 g<br>15.43 gr = 1 g</p></div>
+    <div class="panel"><h3>Energy</h3><p class="mono">E = w × v² ÷ 450,436<br>w in grains, v in ft/s, E in ft·lbf<br>450,436 = 2 × 7,000 × 32.174</p></div>
+  </div>
+  <div class="scroll-x"><table id="specTable"></table></div>
+  <p class="muted" style="margin-top:12px;font-size:.9rem">Dimensions are the nominal maximums from the SAAMI and CIP cartridge drawings. Typical loads are representative factory figures from rifle-length barrels for rifle cartridges and 4 to 6 inch barrels for handgun cartridges; a maker's own box or data sheet governs for any specific load.</p>
+</section>
+<script>
+/* ---------- data ---------- */
+const CARTS=[
+{id:'22lr',name:'.22 Long Rifle',short:'.22 LR',aka:'.22 LR · rimfire',fam:'.22',nominal:0.22,bullet:0.2255,caseLen:0.613,oal:0.975,rim:0.278,base:0.226,neck:0.226,head:'rimfire',shape:'straight',nose:'round',wt:40,vel:1200,year:1887,
+ use:'Training, plinking, and small game. The most-produced cartridge in the world.',
+ nameNote:'The number is the nominal bullet diameter in inches. The bullet is heeled: its base is narrowed to fit inside a case of the same outside diameter, so bullet and case measure the same.',
+ safety:'A .22 LR drops loosely into a .22 WMR chamber and can be fired there, where the larger chamber lets the case split. Keep the two apart.'},
+{id:'22wmr',name:'.22 Winchester Magnum Rimfire',short:'.22 WMR',aka:'.22 Magnum · .22 WMR · rimfire',fam:'.22',nominal:0.22,bullet:0.224,caseLen:1.055,oal:1.350,rim:0.294,base:0.242,neck:0.242,head:'rimfire',shape:'straight',nose:'round',wt:40,vel:1875,year:1959,
+ use:'Small game and varmints at longer range than the .22 LR reaches.',
+ nameNote:'Winchester Magnum Rimfire, 1959. A longer and wider case than the .22 LR, with a jacketed .224 bullet.',
+ safety:'Too long and too wide to chamber in a .22 LR firearm. Convertible revolvers carry a separate cylinder for each.'},
+{id:'380',name:'.380 ACP',short:'.380',aka:'9×17mm · 9mm Browning Short · 9mm Kurz',fam:'.355',nominal:0.380,bullet:0.355,caseLen:0.680,oal:0.984,rim:0.374,base:0.374,neck:0.373,head:'rimless',shape:'straight',nose:'round',wt:95,vel:955,year:1908,
+ use:'Compact carry pistols.',
+ nameNote:'Automatic Colt Pistol, 1908. Named .380 but loaded with a .355 bullet, the same diameter as the 9mm Luger, in a shorter case. In metric it is 9×17mm.',
+ safety:'Shorter and lower pressure than 9mm Luger. The two are not interchangeable.'},
+{id:'9mm',name:'9mm Luger',short:'9mm',aka:'9×19mm Parabellum · 9mm NATO',fam:'.355',nominal:0.3543,bullet:0.355,caseLen:0.754,oal:1.169,rim:0.394,base:0.391,neck:0.380,head:'rimless',shape:'straight',nose:'round',wt:115,vel:1180,year:1902,
+ use:'The most common handgun cartridge today: service, carry, and competition pistols.',
+ nameNote:'9×19mm: a 9 mm nominal bullet in a 19 mm case. 9mm Luger, 9mm Parabellum, and 9mm NATO are all the same cartridge. The bullet measures .355 in.',
+ safety:'Not the same as 9mm Makarov (9×18mm), 9mm Browning Short (.380 ACP), or .38 Special (.357 bullet).'},
+{id:'38spl',name:'.38 Special',short:'.38 Spl',aka:'.38 S&amp;W Special · .38 Spl',fam:'.357',nominal:0.38,bullet:0.357,caseLen:1.155,oal:1.550,rim:0.440,base:0.379,neck:0.379,head:'rimmed',shape:'straight',nose:'round',wt:158,vel:755,year:1898,
+ use:'Revolvers; target shooting and defense with mild recoil.',
+ nameNote:'The .38 is the case diameter (.379 in), inherited from earlier heeled-bullet designs. The bullet measures .357 in.',
+ safety:'Safe in any .357 Magnum revolver, which was designed to take it.'},
+{id:'357',name:'.357 Magnum',short:'.357',aka:'.357 S&amp;W Magnum · .357 Mag',fam:'.357',nominal:0.357,bullet:0.357,caseLen:1.290,oal:1.590,rim:0.440,base:0.379,neck:0.379,head:'rimmed',shape:'straight',nose:'flat',wt:158,vel:1235,year:1935,
+ use:'Revolvers and lever-action rifles; defense and hunting.',
+ nameNote:'Named for the true bullet diameter, .357 in. It is a .38 Special lengthened by 0.135 in (1.290 against 1.155) and loaded to far higher pressure.',
+ safety:'Fires .38 Special. The longer .357 case will not seat in a .38 Special cylinder, and that is deliberate.'},
+{id:'40sw',name:'.40 S&amp;W',short:'.40',aka:'.40 Smith &amp; Wesson · 10×22mm',fam:'.40',nominal:0.40,bullet:0.400,caseLen:0.850,oal:1.135,rim:0.424,base:0.424,neck:0.423,head:'rimless',shape:'straight',nose:'flat',wt:180,vel:1000,year:1990,
+ use:'Service pistols, especially from the 1990s to the 2010s.',
+ nameNote:'Smith & Wesson, 1990. The name matches the bullet: .400 in, which is 10.16 mm. A shortened 10mm Auto.',
+ safety:'Shares its .400 bullet with the 10mm Auto, but the cases differ in length. Not interchangeable.'},
+{id:'45acp',name:'.45 ACP',short:'.45',aka:'.45 Auto · 11.43×23mm',fam:'.45',nominal:0.45,bullet:0.452,caseLen:0.898,oal:1.275,rim:0.480,base:0.476,neck:0.473,head:'rimless',shape:'straight',nose:'round',wt:230,vel:850,year:1905,
+ use:'The 1911 pistol and many others; defense and competition.',
+ nameNote:'Automatic Colt Pistol, 1905. The bullet measures .452 in (11.48 mm); the metric name is 11.43×23mm.',
+ safety:'Not the same as .45 Colt, a longer rimmed revolver cartridge of similar bullet diameter.'},
+{id:'44mag',name:'.44 Magnum',short:'.44 Mag',aka:'.44 Remington Magnum',fam:'.43',nominal:0.44,bullet:0.429,caseLen:1.285,oal:1.610,rim:0.514,base:0.457,neck:0.457,head:'rimmed',shape:'straight',nose:'flat',wt:240,vel:1230,year:1955,
+ use:'Hunting revolvers and lever-action rifles.',
+ nameNote:'The bullet measures .429 in, not .44. The name carries over from 1800s .44 cartridges whose heeled bullets did measure .44.',
+ safety:'Fires the shorter .44 Special, the same way the .357 Magnum fires .38 Special.'},
+{id:'223',name:'.223 Remington / 5.56×45mm NATO',short:'.223',aka:'5.56 NATO · .223 Rem',fam:'.22',nominal:0.223,bullet:0.224,caseLen:1.760,oal:2.260,rim:0.378,base:0.376,shoulder:0.354,neck:0.253,neckLen:0.203,shoulderH:0.06,head:'rimless',shape:'bottleneck',nose:'spitzer',wt:55,vel:3240,year:1964,
+ use:'AR-15 pattern rifles and bolt-action rifles; varmints; the standard NATO rifle cartridge.',
+ nameNote:'The bullet measures .224 in; the name says .223. The military version is 5.56×45mm NATO: 5.56 mm nominal diameter, 45 mm case.',
+ safety:'.223 Remington is fine in a 5.56 NATO chamber. 5.56 NATO in a chamber marked only .223 Rem is not recommended: it is loaded to higher pressure.'},
+{id:'300blk',name:'.300 AAC Blackout',short:'.300 BLK',aka:'7.62×35mm · .300 BLK',fam:'.30',nominal:0.300,bullet:0.308,caseLen:1.368,oal:2.260,rim:0.378,base:0.376,shoulder:0.360,neck:0.334,neckLen:0.30,shoulderH:0.03,head:'rimless',shape:'bottleneck',nose:'spitzer',wt:125,vel:2215,year:2011,
+ use:'AR-15 pattern rifles fitted with a .300 BLK barrel; suppressed shooting with subsonic loads.',
+ nameNote:'Advanced Armament Corporation Blackout, 2011; in metric, 7.62×35mm. A .223 case shortened and opened up to hold a .308 bullet.',
+ safety:'The most dangerous mix-up on this page. Same case head and same overall length as .223/5.56, so it feeds and chambers in a 5.56 rifle. A .308 bullet cannot pass a .224 bore, and the rifle bursts. Keep the two in separate, labeled magazines.'},
+{id:'762x39',name:'7.62×39mm',short:'7.62×39',aka:'7.62 Soviet · M43',fam:'.31',nominal:0.300,bullet:0.311,caseLen:1.524,oal:2.205,rim:0.447,base:0.443,shoulder:0.396,neck:0.339,neckLen:0.26,shoulderH:0.08,head:'rimless',shape:'bottleneck',nose:'spitzer',wt:123,vel:2350,year:1944,
+ use:'AK and SKS rifles.',
+ nameNote:'Metric: 7.62 mm nominal diameter, 39 mm case. The bullet usually measures .311 in (7.9 mm), not .308, so it is not the .308 Winchester bullet despite the 7.62 in both names.',
+ safety:'The 7.62 is shared with 7.62×51mm NATO (.308 Win) and 7.62×54R. The case length after the × tells them apart.'},
+{id:'243',name:'.243 Winchester',short:'.243',aka:'6.2×52mm · 6mm',fam:'.24',nominal:0.243,bullet:0.243,caseLen:2.045,oal:2.710,rim:0.473,base:0.471,shoulder:0.454,neck:0.276,neckLen:0.24,shoulderH:0.14,head:'rimless',shape:'bottleneck',nose:'spitzer',wt:100,vel:2960,year:1955,
+ use:'Deer and varmint rifles; light recoil, flat shooting.',
+ nameNote:'Named for its true bullet diameter, .243 in (6 mm class). It is the .308 Winchester case necked down, 1955.',
+ safety:'Same case head as the .308 Winchester; the neck is the only visible difference, so read the headstamp.'},
+{id:'65cm',name:'6.5 Creedmoor',short:'6.5 CM',aka:'6.5 CM · 6.5×48mm',fam:'.26',nominal:0.2559,bullet:0.264,caseLen:1.920,oal:2.825,rim:0.473,base:0.470,shoulder:0.462,neck:0.295,neckLen:0.28,shoulderH:0.13,head:'rimless',shape:'bottleneck',nose:'spitzer',wt:140,vel:2710,year:2007,
+ use:'Long-range target shooting and deer hunting.',
+ nameNote:'Named in millimeters for the bore class; the bullet measures .264 in (6.7 mm). Introduced in 2007 and named for the historic Creedmoor rifle range in New York.',
+ safety:''},
+{id:'270',name:'.270 Winchester',short:'.270',aka:'.270 Win · 6.8×64mm',fam:'.27',nominal:0.270,bullet:0.277,caseLen:2.540,oal:3.340,rim:0.473,base:0.470,shoulder:0.441,neck:0.308,neckLen:0.33,shoulderH:0.10,head:'rimless',shape:'bottleneck',nose:'spitzer',wt:130,vel:3060,year:1925,
+ use:'Deer and elk; a classic hunting cartridge.',
+ nameNote:'The bullet measures .277 in; the name rounds down. It is the .30-06 case necked down, 1925.',
+ safety:''},
+{id:'3030',name:'.30-30 Winchester',short:'.30-30',aka:'.30 WCF · 7.62×51mmR',fam:'.30',nominal:0.30,bullet:0.308,caseLen:2.039,oal:2.550,rim:0.506,base:0.422,shoulder:0.401,neck:0.330,neckLen:0.38,shoulderH:0.06,head:'rimmed',shape:'bottleneck',nose:'flat',wt:150,vel:2390,year:1895,
+ use:'Lever-action deer rifles since 1895.',
+ nameNote:'.30 caliber with 30 grains of smokeless powder in the original load. Rimmed, and loaded with flat-nosed bullets.',
+ safety:'The flat nose matters: in a tube magazine, each bullet rests against the primer of the round ahead of it, and a pointed bullet there can set it off under recoil.'},
+{id:'308',name:'.308 Winchester / 7.62×51mm NATO',short:'.308',aka:'7.62 NATO · .308 Win',fam:'.30',nominal:0.308,bullet:0.308,caseLen:2.015,oal:2.800,rim:0.473,base:0.470,shoulder:0.454,neck:0.343,neckLen:0.30,shoulderH:0.10,head:'rimless',shape:'bottleneck',nose:'spitzer',wt:150,vel:2820,year:1952,
+ use:'Hunting, target shooting, and military use.',
+ nameNote:'Named for its true bullet diameter, .308 in. The military 7.62×51mm NATO is 7.62 mm nominal, 51 mm case.',
+ safety:'.308 Win and 7.62×51 NATO are generally treated as interchangeable, but they are built to slightly different standards; follow the firearm maker\'s guidance.'},
+{id:'3006',name:'.30-06 Springfield',short:'.30-06',aka:'7.62×63mm · "thirty-aught-six"',fam:'.30',nominal:0.30,bullet:0.308,caseLen:2.494,oal:3.340,rim:0.473,base:0.470,shoulder:0.441,neck:0.340,neckLen:0.38,shoulderH:0.09,head:'rimless',shape:'bottleneck',nose:'spitzer',wt:150,vel:2910,year:1906,
+ use:'Hunting almost any North American game; the US service cartridge from 1906 into the 1950s.',
+ nameNote:'.30 caliber, adopted 1906. The bullet is .308 in, the same as the .308 Winchester, in a case 0.479 in longer.',
+ safety:''}
+];
+const FAM_LABEL={'.22':'.22 family (.224 class)','.24':'.243','.26':'.264','.27':'.277','.30':'.308 family','.31':'.311','.355':'.355 (9mm class)','.357':'.357','.40':'.400','.43':'.429','.45':'.452'};
+const energy=c=>c.wt*c.vel*c.vel/450436;
+const mm=x=>(x*25.4).toFixed(2);
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const byId=Object.fromEntries(CARTS.map(c=>[c.id,c]));
+const SORTS={dia:(a,b)=>a.bullet-b.bullet||a.oal-b.oal, oal:(a,b)=>a.oal-b.oal, energy:(a,b)=>energy(a)-energy(b), fam:(a,b)=>a.bullet-b.bullet||a.oal-b.oal};
+let sortMode='dia', selected='9mm';
+
+/* ---------- to-scale line-up ---------- */
+const PX=64, BASE_Y=248, COL=61, LEFT=74, SVG_H=318;
+function casePts(c){
+  const pts=[], r=c.rim/2, b=c.base/2;
+  if(c.head==='rimfire'){pts.push([r,0],[r,0.045],[b,0.045]);}
+  else if(c.head==='rimmed'){pts.push([r,0],[r,0.055],[b,0.055]);}
+  else{const g=(c.base-0.045)/2;pts.push([r,0],[r,0.045],[g,0.045],[g,0.095],[b,0.095]);}
+  if(c.shape==='bottleneck'){const s=c.caseLen-c.neckLen-c.shoulderH;pts.push([c.shoulder/2,s],[c.neck/2,s+c.shoulderH],[c.neck/2,c.caseLen]);}
+  else pts.push([c.neck/2,c.caseLen]);
+  return pts;
+}
+function bulletPts(c){
+  const hw=c.bullet/2, L=c.oal-c.caseLen, y0=c.caseLen-0.02, pts=[[hw,y0]];
+  let nose=L; if(c.nose==='round')nose=Math.min(L,hw*1.25); if(c.nose==='flat')nose=Math.min(L,hw*1.1);
+  const shank=L-nose; if(shank>0)pts.push([hw,c.caseLen+shank]);
+  const ys=c.caseLen+shank, N=10;
+  for(let i=1;i<=N;i++){const t=i/N;let w;
+    if(c.nose==='flat')w=hw*(1-0.45*t);
+    else w=hw*Math.sqrt(1-t*t)+(c.nose==='spitzer'?hw*0.07*t:0);
+    pts.push([w,ys+nose*t]);}
+  return pts;
+}
+function toPath(pts){
+  const R=pts.map(p=>[p[0]*PX,BASE_Y-p[1]*PX]);
+  const right=R.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const left=R.slice().reverse().map(p=>'L'+(-p[0]).toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  return right+' '+left+' Z';
+}
+function layout(){
+  const order=CARTS.slice().sort(SORTS[sortMode]);
+  let x=LEFT, prevFam=null; const pos={}, groups=[];
+  order.forEach(c=>{
+    if(sortMode==='fam'){
+      if(prevFam!==null&&c.fam!==prevFam)x+=24;
+      if(c.fam!==prevFam){groups.push({fam:c.fam,x0:x-COL/2+6,x1:x+COL/2-6});prevFam=c.fam;}
+      else groups[groups.length-1].x1=x+COL/2-6;
+    }
+    pos[c.id]=x; x+=COL;
+  });
+  return {order,pos,groups,width:x-COL/2+16};
+}
+function buildLineup(){
+  const svg=document.getElementById('lineupSvg');
+  const L=layout();
+  let s=`<defs>
+  <linearGradient id="gBrass" x1="0" x2="1" y1="0" y2="0"><stop offset="0" style="stop-color:var(--brass-lo)"/><stop offset=".35" style="stop-color:var(--brass-hi)"/><stop offset=".6" style="stop-color:var(--brass-fill)"/><stop offset="1" style="stop-color:var(--brass-lo)"/></linearGradient>
+  <linearGradient id="gCopper" x1="0" x2="1" y1="0" y2="0"><stop offset="0" style="stop-color:var(--copper-lo)"/><stop offset=".35" style="stop-color:var(--copper-hi)"/><stop offset=".6" style="stop-color:var(--copper)"/><stop offset="1" style="stop-color:var(--copper-lo)"/></linearGradient></defs>`;
+  s+=`<g class="ruler"><line x1="${LEFT-34}" y1="${BASE_Y}" x2="${LEFT-34}" y2="${BASE_Y-3.5*PX}"/>`;
+  for(let i=0;i<=7;i++){const y=BASE_Y-i*0.5*PX, maj=i%2===0;s+=`<line x1="${LEFT-34-(maj?8:4)}" y1="${y}" x2="${LEFT-34}" y2="${y}"/>`;if(maj)s+=`<text x="${LEFT-46}" y="${y+4}" text-anchor="end">${i/2}"</text>`;}
+  s+=`<text x="${LEFT-58}" y="${BASE_Y-3.5*PX-10}" text-anchor="start">inches</text></g>`;
+  s+=`<line x1="${LEFT-34}" y1="${BASE_Y}" x2="${L.width}" y2="${BASE_Y}" style="stroke:var(--line);stroke-width:1"/>`;
+  CARTS.forEach(c=>{
+    s+=`<g class="cart" data-id="${c.id}" tabindex="0" role="button" aria-pressed="${c.id===selected}" aria-label="${c.name}, bullet ${c.bullet} inch, overall length ${c.oal} inch" style="transform:translate(${L.pos[c.id]}px,0)">
+      <rect x="-${COL/2}" y="${BASE_Y-3.5*PX-14}" width="${COL}" height="${3.5*PX+70}" style="fill:transparent"/>
+      <path class="case" d="${toPath(casePts(c))}"/><path class="bullet" d="${toPath(bulletPts(c))}"/>
+      <text class="lbl" x="0" y="${BASE_Y+18}" text-anchor="middle">${c.short}</text>
+      <text class="dia mono" x="0" y="${BASE_Y+33}" text-anchor="middle">${c.bullet.toFixed(3).replace(/^0/,'')}"</text></g>`;
+  });
+  s+=`<g id="famBrackets"></g>`;
+  svg.setAttribute('width',L.width); svg.setAttribute('height',SVG_H); svg.setAttribute('viewBox',`0 0 ${L.width} ${SVG_H}`);
+  svg.style.minWidth=L.width+'px';
+  svg.innerHTML=s;
+  svg.querySelectorAll('.cart').forEach(g=>{
+    g.addEventListener('click',()=>select(g.dataset.id));
+    g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select(g.dataset.id);}});
+  });
+  drawBrackets(L);
+}
+function drawBrackets(L){
+  const g=document.getElementById('famBrackets'); let s='';
+  if(sortMode==='fam'){const y=BASE_Y+46;
+    L.groups.forEach(gr=>{s+=`<path class="fam-bracket" d="M${gr.x0} ${y-5} V${y} H${gr.x1} V${y-5}"/><text class="fam-lbl" x="${(gr.x0+gr.x1)/2}" y="${y+14}" text-anchor="middle">${FAM_LABEL[gr.fam]}</text>`;});}
+  g.innerHTML=s;
+}
+function relayout(){
+  const svg=document.getElementById('lineupSvg'); const L=layout();
+  svg.querySelectorAll('.cart').forEach(g=>{g.style.transform=`translate(${L.pos[g.dataset.id]}px,0)`;});
+  svg.setAttribute('width',L.width); svg.setAttribute('viewBox',`0 0 ${L.width} ${SVG_H}`); svg.style.minWidth=L.width+'px';
+  drawBrackets(L);
+}
+document.getElementById('sortBtns').addEventListener('click',e=>{
+  const b=e.target.closest('.pill'); if(!b)return; sortMode=b.dataset.sort;
+  document.querySelectorAll('#sortBtns .pill').forEach(p=>p.setAttribute('aria-pressed',p===b));
+  relayout();
+});
+
+/* ---------- end-on diameters ---------- */
+const DIA_GROUPS=(()=>{const m=new Map();CARTS.slice().sort(SORTS.dia).forEach(c=>{if(!m.has(c.bullet))m.set(c.bullet,[]);m.get(c.bullet).push(c);});return [...m.entries()].map(([d,carts])=>({d,carts}));})();
+let diaScale=2; const SCREEN_PPI=96;
+const diaStr=d=>d.toFixed(d===0.2255?4:3).replace(/^0/,'');
+function buildDia(){
+  const row=document.getElementById('diaRow');
+  row.innerHTML=DIA_GROUPS.map((g,i)=>`<button class="dia" data-i="${i}" data-id="${g.carts[0].id}" aria-pressed="false" aria-label="${diaStr(g.d)} inch, ${g.carts.map(c=>c.name).join(', ')}">
+    <span class="box"><span class="c"><span class="ring"></span></span></span>
+    <span class="v">${diaStr(g.d)}"</span><span class="u">${mm(g.d)} mm</span>
+    <span class="names">${g.carts.map(c=>`<span>${c.short}</span>`).join('')}</span>
+    <span class="delta"></span></button>`).join('');
+  row.addEventListener('click',e=>{const b=e.target.closest('.dia');if(!b)return;const g=DIA_GROUPS[+b.dataset.i];const inGroup=g.carts.find(c=>c.id===selected);select(inGroup?inGroup.id:g.carts[0].id);});
+  document.getElementById('diaScale').addEventListener('click',e=>{const b=e.target.closest('.pill');if(!b)return;diaScale=+b.dataset.scale;document.querySelectorAll('#diaScale .pill').forEach(p=>p.setAttribute('aria-pressed',p===b));updateDia();});
+  updateDia();
+}
+function updateDia(){
+  const sel=byId[selected], px=d=>(d*SCREEN_PPI*diaScale).toFixed(1)+'px';
+  const maxD=DIA_GROUPS[DIA_GROUPS.length-1].d, boxH=px(maxD+0.04);
+  document.querySelectorAll('#diaRow .dia').forEach(b=>{
+    const g=DIA_GROUPS[+b.dataset.i], c=b.querySelector('.c'), r=b.querySelector('.ring');
+    b.querySelector('.box').style.height=boxH;
+    c.style.width=c.style.height=px(g.d); r.style.width=r.style.height=px(sel.bullet);
+    const same=g.carts.some(k=>k.id===selected); b.setAttribute('aria-pressed',same);
+    const delta=g.d-sel.bullet;
+    b.querySelector('.delta').textContent=same?'selected':Math.abs(delta)<0.0005?'same diameter':(delta>0?'+':'−')+Math.abs(delta).toFixed(3).replace(/^0/,'')+'" vs '+sel.short;
+  });
+  document.getElementById('diaScaleNote').textContent=diaScale===1?'Actual size on a 96 pixel-per-inch screen':diaScale+'× actual size (96 pixels per inch)';
+}
+
+/* ---------- picker + detail ---------- */
+function buildPicker(){
+  const p=document.getElementById('picker');
+  p.innerHTML=CARTS.slice().sort(SORTS.dia).map(c=>`<button class="chip" data-id="${c.id}" aria-pressed="${c.id===selected}">${c.short}<span class="d">${c.bullet.toFixed(3).replace(/^0/,'')}"</span></button>`).join('');
+  p.addEventListener('click',e=>{const b=e.target.closest('.chip');if(b)select(b.dataset.id);});
+}
+function select(id){
+  selected=id;
+  document.querySelectorAll('#picker .chip, #lineupSvg .cart, #detail .kin .chip').forEach(el=>el.setAttribute('aria-pressed',el.dataset.id===id));
+  renderDetail(byId[id]);
+  if(document.querySelector('#diaRow .dia'))updateDia();
+}
+function renderDetail(c){
+  const E=energy(c), kin=CARTS.filter(k=>k!==c&&k.bullet===c.bullet);
+  const head={rimfire:'Rimfire',rimmed:'Rimmed',rimless:'Rimless'}[c.head];
+  const shape=c.shape==='bottleneck'?'bottleneck':'straight';
+  document.getElementById('detail').innerHTML=`
+    <h3>${c.name}</h3><p class="aka">${c.aka} · introduced ${c.year}</p>
+    <div class="specs">
+      <div class="spec"><span class="k">Bullet diameter</span><span class="v">${c.bullet.toFixed(c.bullet===0.2255?4:3)} in</span><span class="u">${mm(c.bullet)} mm</span></div>
+      <div class="spec"><span class="k">Case length</span><span class="v">${c.caseLen.toFixed(3)} in</span><span class="u">${mm(c.caseLen)} mm</span></div>
+      <div class="spec"><span class="k">Overall length</span><span class="v">${c.oal.toFixed(3)} in</span><span class="u">${mm(c.oal)} mm</span></div>
+      <div class="spec"><span class="k">Rim diameter</span><span class="v">${c.rim.toFixed(3)} in</span><span class="u">${mm(c.rim)} mm</span></div>
+      <div class="spec"><span class="k">Case</span><span class="v">${head}</span><span class="u">${shape}${c.head==='rimfire'?' · priming in the rim':' · centerfire'}</span></div>
+    </div>
+    <div class="load">
+      <div class="specs" style="margin-bottom:0">
+        <div class="spec"><span class="k">Typical load</span><span class="v">${c.wt} gr</span><span class="u">${(c.wt*0.06479891).toFixed(2)} g bullet</span></div>
+        <div class="spec"><span class="k">Muzzle velocity</span><span class="v">${fmt(c.vel)} ft/s</span><span class="u">${fmt(c.vel*0.3048)} m/s</span></div>
+        <div class="spec"><span class="k">Muzzle energy</span><span class="v">${fmt(E)} ft·lbf</span><span class="u">${fmt(E*1.355818)} J</span></div>
+      </div>
+      <p class="formula">${c.wt} gr × ${fmt(c.vel)}² ÷ 450,436 = ${fmt(E)} ft·lbf</p>
+    </div>
+    <p class="note"><strong>Used for</strong>${c.use}</p>
+    <p class="note"><strong>About the name</strong>${c.nameNote}</p>
+    ${c.safety?`<p class="note safety"><strong>Worth knowing</strong>${c.safety}</p>`:''}
+    <div class="kin"><span class="muted" style="font-size:.9rem">${kin.length?`Same ${c.bullet.toFixed(3).replace(/^0/,'')}" bullet diameter:`:'No other cartridge here shares this bullet diameter.'}</span>
+      ${kin.map(k=>`<button class="chip" data-id="${k.id}" aria-pressed="false">${k.short}</button>`).join('')}</div>`;
+  document.querySelectorAll('#detail .kin .chip').forEach(b=>b.addEventListener('click',()=>{select(b.dataset.id);document.getElementById('detail').scrollIntoView({block:'nearest'});}));
+}
+
+/* ---------- name vs. diameter chart ---------- */
+function buildChart(){
+  const svg=document.getElementById('nameChart');
+  const rows=CARTS.slice().sort((a,b)=>a.bullet-b.bullet), W=640, LBL=96, RH=21, TOP=14, AX=30;
+  const H=TOP+rows.length*RH+AX+6, x0=0.20, x1=0.48, xs=v=>LBL+(v-x0)/(x1-x0)*(W-LBL-20);
+  let s=`<g>`;
+  for(let v=0.20;v<=0.481;v+=0.05){const x=xs(v);s+=`<line x1="${x}" y1="${TOP}" x2="${x}" y2="${TOP+rows.length*RH}" style="stroke:var(--line);stroke-width:1"/><text class="mono" x="${x}" y="${TOP+rows.length*RH+16}" text-anchor="middle" style="fill:var(--muted)">${v.toFixed(2).replace(/^0/,'')}"</text><text class="mono" x="${x}" y="${TOP+rows.length*RH+29}" text-anchor="middle" style="fill:var(--muted);font-size:10px">${(v*25.4).toFixed(1)} mm</text>`;}
+  rows.forEach((c,i)=>{const y=TOP+i*RH+RH/2, a=xs(c.nominal), b=xs(c.bullet);
+    s+=`<g><title>${c.name}: the name says ${c.nominal.toFixed(3)}, the bullet measures ${c.bullet.toFixed(c.bullet===0.2255?4:3)}</title>
+        <text x="${LBL-8}" y="${y+4}" text-anchor="end" style="font-size:12px;letter-spacing:.02em">${c.short}</text>
+        <line x1="${a}" y1="${y}" x2="${b}" y2="${y}" style="stroke:var(--copper);stroke-width:2"/>
+        <circle cx="${a}" cy="${y}" r="4.5" style="fill:var(--surface);stroke:var(--copper);stroke-width:2"/>
+        <circle cx="${b}" cy="${y}" r="4.5" style="fill:var(--copper)"/></g>`;});
+  s+=`</g>`;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.setAttribute('width',W); svg.style.minWidth='560px'; svg.innerHTML=s;
+}
+/* ---------- anatomy ---------- */
+const PARTS={
+ bullet:['Bullet','The projectile, and the only part that leaves the barrel. Usually a lead core in a copper-alloy jacket. Its diameter is what the caliber describes.'],
+ case:['Case','The brass (sometimes steel or aluminum) shell that holds the round together and expands to seal the chamber against gas when fired. Its base carries the headstamp.'],
+ powder:['Propellant','Smokeless powder. When the primer ignites it, the powder burns and the gas drives the bullet down the bore. The charge is measured in grains.'],
+ primer:['Primer','A small cup of shock-sensitive compound in the center of the base. The firing pin dents it, it flashes through the flash hole, and the powder lights.'],
+ rim:['Rim and extractor groove','The rim gives the extractor something to grip. A rimmed case (revolvers, lever actions) has a rim wider than the body; a rimless case (most pistols and rifles) has a groove cut in instead, so the rim is no wider than the body.'],
+ neck:['Shoulder and neck','A bottleneck case narrows at the shoulder to a neck that grips the bullet. Rifle cartridges are usually bottlenecked; handgun cartridges are usually straight-walled.']};
+function showPart(k){
+  document.getElementById('anatSvg').dataset.active=k;
+  document.querySelectorAll('#partBtns .pill').forEach(b=>b.setAttribute('aria-pressed',b.dataset.part===k));
+  document.getElementById('partDesc').innerHTML=`<strong>${PARTS[k][0]}</strong><br>${PARTS[k][1]}`;
+}
+document.getElementById('partBtns').addEventListener('click',e=>{const b=e.target.closest('.pill');if(b)showPart(b.dataset.part);});
+
+/* ---------- shotgun gauge ---------- */
+const GAUGES=[['12 gauge',0.729],['16 gauge',0.663],['20 gauge',0.615],['28 gauge',0.550],['.410 bore',0.410]];
+document.getElementById('gaugeRow').innerHTML=GAUGES.map(([g,d])=>`<div class="gauge"><div class="bore" style="width:${(d*120).toFixed(0)}px;height:${(d*120).toFixed(0)}px" aria-hidden="true"></div>${g}<span class="d">${d.toFixed(3).replace(/^0/,'')}" · ${mm(d)} mm</span></div>`).join('')+`<p class="muted" style="flex-basis:100%;margin:8px 0 0;font-size:.9rem">Drawn at 120 pixels per inch. Smaller number, bigger bore.</p>`;
+
+/* ---------- bullet construction ---------- */
+const SPITZER='M16 86 V46 C16 30 28 14 36 10 C44 14 56 30 56 46 V86 Z', ROUND='M16 86 V40 A20 20 0 0 1 56 40 V86 Z';
+const BULLETS=[
+ ['FMJ','Full metal jacket','A lead core with the jacket covering the nose; the base is often left open. Holds its shape and feeds reliably. Range practice and military use.',
+  `<path d="${SPITZER}" style="fill:var(--copper)"/><rect x="16" y="81" width="40" height="5" style="fill:var(--lead)"/>`],
+ ['JHP','Jacketed hollow point','A cavity in the nose opens the bullet on impact so it expands and stops inside the target. The standard defensive load, and the usual choice for limiting over-penetration.',
+  `<path d="M16 86 V42 C16 30 22 22 30 18 V30 H42 V18 C50 22 56 30 56 42 V86 Z" style="fill:var(--copper)"/><path d="M30 18 V30 H42 V18 C38 16 34 16 30 18 Z" style="fill:var(--steel)"/>`],
+ ['SP','Soft point','The jacket stops short of the tip and leaves lead exposed. Expands on game. The traditional hunting rifle bullet.',
+  `<path d="${SPITZER}" style="fill:var(--lead)"/><path d="M16 86 V46 C16 36 19 29 23 24 L49 24 C53 29 56 36 56 46 V86 Z" style="fill:var(--copper)"/>`],
+ ['LRN','Lead round nose','No jacket at all. Inexpensive; common in .22 LR and revolver loads. Leaves lead fouling in the bore.',
+  `<path d="${ROUND}" style="fill:var(--lead)"/>`],
+ ['WC / SWC','Wadcutter and semi-wadcutter','A flat face that cuts a clean round hole in paper, which makes scoring easy. Target revolver loads at low velocity.',
+  `<path d="M16 86 V42 L20 38 V36 L28 24 H44 L52 36 V38 L56 42 V86 Z" style="fill:var(--lead)"/>`],
+ ['Tipped','Polymer tip','A plastic point set in a hollow cavity. Keeps the nose streamlined in flight and starts expansion on impact. Hunting and varmint rifle loads.',
+  `<path d="${SPITZER}" style="fill:var(--copper)"/><path d="M29 24 C32 16 34 10 36 6 C38 10 40 16 43 24 Z" style="fill:var(--brass-hi);stroke:var(--brass-lo);stroke-width:.8"/>`]];
+document.getElementById('bulletTypes').innerHTML=BULLETS.map(b=>`<div class="panel bul"><svg viewBox="0 0 72 92" aria-hidden="true">${b[3]}</svg><div><h3>${b[0]} <span class="muted" style="font-weight:500;text-transform:none;letter-spacing:0">· ${b[1]}</span></h3><p>${b[2]}</p></div></div>`).join('');
+
+/* ---------- mismatches ---------- */
+const PAIRS=[
+ ['ok','Designed to work','.38 Special in a .357 Magnum revolver','The .357 Magnum is a lengthened .38 Special, so the shorter round chambers and fires safely. The reverse does not happen: a .357 Magnum case is too long to seat in a .38 Special cylinder, by design. The .44 Special and .44 Magnum pair works the same way.'],
+ ['warn','One direction only','.223 Remington and 5.56×45mm NATO','.223 Rem in a 5.56 NATO chamber is fine. 5.56 NATO in a chamber marked only .223 Rem is not recommended: the NATO round runs at higher pressure and the .223 chamber is cut tighter. Many barrels are marked for both; read the stamp.'],
+ ['danger','Dangerous','.300 Blackout in a 5.56 rifle','Same case head and same overall length, so it feeds from a 5.56 magazine and chambers. The .308 bullet cannot enter the .224 bore, and the rifle bursts. Keep separate, labeled magazines, and never a loose round of either in the range bag.'],
+ ['danger','Dangerous','A 20-gauge shell in a 12-gauge shotgun','The smaller shell slides past the chamber and stops in the barrel. A 12-gauge shell fired behind it bursts the barrel. This is why 20-gauge hulls are yellow by industry convention. If a shot sounds or feels weak, stop and check the bore before firing again.'],
+ ['warn','Not safe one way','.22 LR and .22 WMR','The .22 WMR is longer and wider and will not chamber in a .22 LR firearm. A .22 LR drops loosely into a .22 WMR chamber and fires, and the oversized chamber lets the case split. Convertible revolvers ship with a separate cylinder for each.'],
+ ['warn','Not a substitute','.40 S&W in a 10mm Auto pistol','Same .400 bullet, but the 10mm case is 0.142 in longer. The shorter .40 S&W can slide forward in the 10mm chamber and fire without proper support. SAAMI lists the pairing as unsafe.'],
+ ['no','Will not interchange','9mm Luger, .380 ACP, and 9mm Makarov','9×19, 9×17, and 9×18: three cartridges of nearly the same bullet diameter, three case lengths, three pressure levels. None substitutes for another, however similar the boxes look.'],
+ ['ok','Generally interchangeable','.308 Winchester and 7.62×51mm NATO','Same bullet and the same case dimensions, but the two are built to slightly different standards for chamber tolerances and pressure measurement. Most firearm makers approve both; the manual is the authority.']];
+document.getElementById('pairs').innerHTML=PAIRS.map(p=>`<div class="panel"><span class="verdict ${p[0]}">${p[1]}</span><p class="pair">${p[2]}</p><p>${p[3]}</p></div>`).join('');
+
+/* ---------- quiz ---------- */
+const QUIZ=[
+ ['Which part of a loaded round is the bullet?',['Only the projectile that leaves the barrel','The whole loaded round','The brass case','The primer'],0,'The bullet is the projectile. Bullet, case, propellant, and primer together make one cartridge, also called a round.'],
+ ['In the name 9×19mm, what does the 19 measure?',['Case length in millimeters','Bullet diameter in millimeters','Bullet weight in grams','The year it was adopted'],0,'Metric names give nominal bullet diameter × case length. 9×19mm is the 9mm Luger.'],
+ ['A .44 Magnum fires a bullet that actually measures:',['.429 in','.440 in','.444 in','.410 in'],0,'The .44 name dates from 1800s heeled-bullet cartridges. Modern .44 Magnum bullets measure .429 in.'],
+ ['Which cartridge uses the same .308-inch bullet as the .308 Winchester?',['.30-06 Springfield','7.62×39mm','.270 Winchester','.243 Winchester'],0,'The .30-06 uses a .308 bullet in a longer case. 7.62×39 uses .311, .270 uses .277, and .243 uses .243.'],
+ ['A revolver is stamped .357 MAGNUM. Which other cartridge was it designed to fire?',['.38 Special','9mm Luger','.380 ACP','.357 SIG'],0,'The .357 Magnum is a lengthened .38 Special; the shorter round chambers and fires safely. The reverse does not work: a .357 Magnum case is too long for a .38 Special cylinder.'],
+ ['A rifle is stamped .223 REM only. Which ammunition is not recommended in it?',['5.56×45mm NATO','.223 Remington','Both are fine','Neither is fine'],0,'5.56 NATO is loaded to higher pressure than .223 Rem. .223 in a 5.56 chamber is fine; 5.56 in a .223-only chamber is not recommended.'],
+ ['Why is a 20-gauge shell dangerous in a 12-gauge shotgun?',['It slides down the barrel and lodges, and a 12-gauge shell fired behind it bursts the barrel','It carries too much powder','It is too long for the chamber','It cannot be loaded at all'],0,'The 20-gauge shell is smaller than the 12-gauge bore, so it can slip past the chamber and stop in the barrel. That is why 20-gauge hulls are yellow by convention.'],
+ ['What does 12 gauge mean?',['Twelve lead balls of the bore diameter weigh one pound','The bore is 12 mm across','The shell holds 12 pellets','The barrel is 12 inches long'],0,'Gauge counts balls per pound, so a smaller number means a bigger bore. 12 gauge is about .729 in; 20 gauge is about .615 in.'],
+ ['What is the reliable way to identify a loose cartridge?',['Read the headstamp on the case and match it to the barrel stamp','See whether it fits the chamber','Judge the bullet diameter by eye','Go by the color of the box it came in'],0,'Fitting proves nothing: .300 Blackout fits a 5.56 chamber. The headstamp names the cartridge, the barrel names the chambering, and the two must match.'],
+ ['A 150-grain bullet weighs about:',['9.7 g','150 g','1.5 g','97 g'],0,'7,000 grains make one pound, so one grain is 0.0648 g: 150 × 0.0648 = 9.72 g.']];
+const ORDERS=[[0,1,2,3],[1,0,2,3],[2,1,0,3],[1,2,3,0],[3,0,1,2],[2,3,0,1],[1,3,0,2],[3,2,1,0],[0,2,3,1],[2,0,1,3]];
+let quiz={i:0,score:0,done:[],answered:false};
+function renderQuiz(){
+  const box=document.getElementById('quizBox');
+  const bar=`<div class="progress" aria-hidden="true">${QUIZ.map((q,i)=>`<i class="${quiz.done[i]===true?'done':quiz.done[i]===false?'miss':''}"></i>`).join('')}</div>`;
+  if(quiz.i>=QUIZ.length){
+    box.innerHTML=bar+`<p class="score">${quiz.score} of ${QUIZ.length}</p><p>${quiz.score===QUIZ.length?'Every question right. The line-up is yours.':quiz.score>=7?'Solid. Re-read the mismatch cards and the name chart for the ones you missed.':'Worth another pass through the names section and the mismatch cards before the course.'}</p><button class="btn" id="quizRestart">Start over</button>`;
+    document.getElementById('quizRestart').addEventListener('click',()=>{quiz={i:0,score:0,done:[],answered:false};renderQuiz();});
+    return;
+  }
+  const q=QUIZ[quiz.i], ord=ORDERS[quiz.i];
+  box.innerHTML=bar+`<p class="q-num">Question ${quiz.i+1} of ${QUIZ.length}</p><p class="q-text">${q[0]}</p>
+    <div class="q-opts" id="qOpts">${ord.map(k=>`<button class="q-opt" data-k="${k}">${q[1][k]}</button>`).join('')}</div>
+    <div class="q-fb" id="qFb"><span class="muted">Pick an answer.</span></div>
+    <button class="btn" id="qNext" hidden>${quiz.i+1<QUIZ.length?'Next question':'See score'}</button>`;
+  document.getElementById('qOpts').addEventListener('click',e=>{
+    const b=e.target.closest('.q-opt'); if(!b||quiz.answered)return; quiz.answered=true;
+    const k=+b.dataset.k, right=k===q[2];
+    document.querySelectorAll('#qOpts .q-opt').forEach(o=>{o.disabled=true;if(+o.dataset.k===q[2])o.classList.add('correct');});
+    if(!right)b.classList.add('wrong');
+    if(right)quiz.score++; quiz.done[quiz.i]=right;
+    const fb=document.getElementById('qFb'); fb.className='q-fb '+(right?'good':'bad'); fb.innerHTML=`<strong>${right?'Correct.':'Not quite.'}</strong> ${q[3]}`;
+    document.querySelectorAll('.progress i')[quiz.i].className=right?'done':'miss';
+    document.getElementById('qNext').hidden=false;
+  });
+  document.getElementById('qNext').addEventListener('click',()=>{quiz.i++;quiz.answered=false;renderQuiz();});
+}
+
+/* ---------- spec table ---------- */
+function buildTable(){
+  const rows=CARTS.slice().sort(SORTS.dia);
+  document.getElementById('specTable').innerHTML=`<thead><tr><th>Cartridge</th><th class="n">Bullet dia. (in)</th><th class="n">(mm)</th><th class="n">Case length (in)</th><th class="n">Overall length (in)</th><th>Case</th><th class="n">Typical load</th><th class="n">Energy (ft·lbf)</th><th class="n">Introduced</th></tr></thead><tbody>`+
+  rows.map(c=>`<tr><td class="nm">${c.name}</td><td class="n">${c.bullet.toFixed(c.bullet===0.2255?4:3)}</td><td class="n">${mm(c.bullet)}</td><td class="n">${c.caseLen.toFixed(3)}</td><td class="n">${c.oal.toFixed(3)}</td><td>${{rimfire:'Rimfire',rimmed:'Rimmed',rimless:'Rimless'}[c.head]}, ${c.shape}</td><td class="n">${c.wt} gr @ ${fmt(c.vel)} ft/s</td><td class="n">${fmt(energy(c))}</td><td class="n">${c.year}</td></tr>`).join('')+`</tbody>`;
+}
+
+/* ---------- boot ---------- */
+function start(saved){
+  if(saved&&saved.sortMode)sortMode=saved.sortMode;
+  if(saved&&saved.selected&&byId[saved.selected])selected=saved.selected;
+  if(saved&&saved.quiz){quiz=saved.quiz;quiz.answered=false;}
+  document.querySelectorAll('#sortBtns .pill').forEach(p=>p.setAttribute('aria-pressed',p.dataset.sort===sortMode));
+  showPart('bullet'); buildLineup(); buildPicker(); select(selected); buildDia(); buildChart(); renderQuiz(); buildTable();
+}
+start({});
+</script>
+</main>
+</div>
+</body>
+</html>
